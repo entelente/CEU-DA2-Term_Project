@@ -1,0 +1,59 @@
+---
+title: "Analysis"
+output: pdf_document
+---
+
+
+# 3. Regression Analysis : Pro-brexit vs. Counter-brexit
+
+In the first regression we will examine the effect of brexit by comparing the number of crimes in each regions in 2015 and 2016 using the aggregated crime statistics from May, June, July (This time period will cover the time frame of the Brexit hysteria). Using the Pro_brexit binary variable as the independent variable in the regression it is easy to find a correlation or the lack of correlation.
+
+**Regression A:**
+$$ E[Delta\_crimes|Pro\_brexit] = \alpha + \beta * Pro\_brexit $$
+There can be created a second regression with a control variable of total number of valid votes. This is representing the size of the region which can be also a serious player in the regression.
+
+**Regression B:**
+$$ E[Delta\_crimes|Pro\_brexit, Votes\_Cast] = \alpha + \beta * Pro\_brexit + \gamma * Votes\_Cast $$
+To do these regressions the following steps were made:
+
+* Data filtering, only data from May, June and July was kept
+* Delta_crimes variable was calculated by subtracting crime count in 2015 from crime count in 2016.
+
+```{r, echo=FALSE, message=FALSE}
+# Keeping only months (May, June, July)
+reg_data <- subset(crime_vote, Month == 5 | Month == 6 | Month == 7)
+# Separating data from 2015 and 2016 and merge them calculating the difference
+reg_2015 <- subset(reg_data, Year == 2015)
+reg_2016 <- subset(reg_data, Year == 2016)
+reg_2015 <- reg_2015[, c(1, 4)]
+colnames(reg_2015) <- c("Territory", "Count2015")
+reg_2015 <- aggregate(Count2015 ~ Territory, data = reg_2015, FUN = sum)
+reg_2016 <- aggregate(Count ~ Territory + Votes_Cast + Pro_brexit, data = reg_2016, FUN = sum)
+reg_data <- merge(x = reg_2016, y=reg_2015, by="Territory", all.x=TRUE)
+reg_data$Delta_crime <- reg_data$Count - reg_data$Count2015
+
+reg1 <- lm(Delta_crime ~ Pro_brexit, data = reg_data)
+reg2 <- lm(Delta_crime ~ Pro_brexit + Votes_Cast, data = reg_data)
+
+library(stargazer)
+```
+
+```{r, echo=FALSE, message=FALSE, results='asis'}
+stargazer(list(reg1, reg2), column.labels = c("A", "B"),
+          digits=2, ci=TRUE, report = "vcsp*",
+          title="Comparing regressions",
+          type = "latex", header=FALSE)
+```
+
+### Interpreting results
+The first regression didn't provide an usable result because of the huge standard error the slope coefficient is not statistically significant, interpreting the coefficients has no use. Fortunately the second regression worked better and provided statistically significant results.
+
+**Intercept:** In the examined 3 months time period the average number of crimes is lower by 2822.76 in average in 2016 than in 2015 in regions where 0 votes were cast. This don't have any human interpret-able meaning it just provides an offset for the result. The confidence interval is [-4,713.48, -932.03] and the intercept is in this interval with 95% probability.
+
+**Slope coefficiant of Pro_brexit:** In the examined 3 months time period the average number of crimes is higher by 1691.3 (in 2016 compared to 2015) in pro-brexit regions compared to counter-brexit regions with the same number of votes cast in average. The confidence interval is [34.16, 3,348.45] and the coefficient is in this interval with 95% probability. The p-value is 0.057 which is the chance of the null hypothesis (the slope to be zero) to be zero. I will reject the null hypothesis because there is a 94.3% probability of the positive correlation. 
+
+**Slope coefficiant of Votes_Cast:** In the examined 3 months time period the average number of crimes is higher by 0.004 (in 2016 compared to 2015) in average for each valid vote comparing counter-brexit regions. The confidence interval is [0.003, 0.01] and the coefficient is in this interval with 95% probability. The p-value is lesser than 0.01 which is the chance of the null hypothesis (the slope to be zero) to be zero. I will reject the null hypothesis and accept the positive correlation. 
+
+
+### Conclusion
+According to the regressions brexit had an effect on the crime rates in the UK. The first regression alone wasn't enough because regions with different population had not comparable changes in the crime rates. After initiating a control variable for the population (in this case the total votes cast) the result showed a positive correlation between the crime rate increase and the fact to be a pro-brexit region.

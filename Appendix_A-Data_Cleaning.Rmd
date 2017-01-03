@@ -1,0 +1,80 @@
+---
+title: "Appendix A - Data Cleaning"
+output: pdf_document
+---
+
+```{r setup-A, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Appendix A - Data Cleaning
+
+## Crime data
+
+### Getting the data
+UK crime data was acquired from [(link) data.police.uk](https://data.police.uk/data/) selecting all available areas and all month from January 2015 to November 2016. (November was the last available month at the time of this analysis). The site generated one big zip file. Each month is represented by one directory. Within the directories CSV files contain the actual crime reports. One CSV fire was generated for each police force for each month.
+
+### Challenges
+To make the data usable it was needed to merge all the files to one dataframe but initially it was very slow so some improvements were introduced:
+
+* Slowness of R built in CSV parser --> read_csv was used from readr package (about 10x speedup)
+* Single threaded nature of R --> doParallel package was used to process the input files on multiple threads (8)
+* During merging the loaded data frames rbind always reallocated the memory for each bind and made the process quite slow --> rbindlist could preallocate all the necessary memory and merge all the data frames almost instantly
+
+### Size of data
+|                            | Size        |
+|----------------------------|-------------|
+| Downloaded Zip             | 450 Mb      |
+| Uncompressed CSVs          | 2284 Mb     |
+| Cleaned DF in rdata format | 85 Mb       |
+| No. variables              | 12          |
+| No. variables (cleaned)    | 6           |
+| No. observations           | 11,306,179  |
+
+
+### Code
+The following R code was used to load, clean and save the data in rdata format.
+
+```{r clean_crime_data, child='clean_crime_data.Rmd'}
+```
+
+\newpage
+## Vote data
+
+### Getting the data
+Brexit poll results were downloaded from [(link) www.electoralcommission.org.uk](http://www.electoralcommission.org.uk/find-information-by-subject/elections-and-referendums/upcoming-elections-and-referendums/eu-referendum/electorate-and-count-information) in CSV format.
+
+### Size of data
+|                            | Size   |
+|----------------------------|--------|
+| Downloaded CSV             | 63 Kb  |
+| Cleaned DF in rdata format | 6.5 Kb |
+| No. variables              | 21     |
+| No. variables (cleaned)    | 5      |
+| No. observations           | 382    |
+
+
+### Code
+The following R code was used to load, clean and save the data in rdata format.
+
+```{r clean_vote_data, child='clean_vote_data.Rmd'}
+```
+
+\newpage
+## Cross referencing police force and voting regions
+
+### Getting the data
+It required extensive research on the web to find data that contains both the governmental areas of the UK and also the police force regions too. [(link) data.gov.uk](https://data.gov.uk/dataset/local-authority-district-to-community-safety-partnerships-to-police-force-areas-december-2016-l).
+
+### Challenges
+
+* Different naming for police forces --> It was corrected manually
+* Missing date --> North Ireland police force were added manually, Scotland police forces were skipped because there were no crime data for them in the crimes dataset.
+
+### Code
+The following R code was used to load, clean and save the data in rdata format.
+
+```{r create_xref_data, child='create_xref_data.Rmd'}
+```
+
+

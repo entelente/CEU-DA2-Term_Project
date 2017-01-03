@@ -1,0 +1,153 @@
+---
+title: "Understanding the data"
+output: pdf_document
+---
+
+
+```{r, echo=FALSE}
+load("data/crime.rdata") # Load crime data
+load("data/vote.rdata") # Load vote data
+load("data/xref.rdata") # Load police/govermental xref data
+
+relevant_crime <- subset(crime, Type=="Anti-social behaviour" | Type == "Violence and sexual offences" )
+
+num_crimes = nrow(crime)
+num_relevant_crimes = nrow(relevant_crime)
+num_antisocial = nrow(subset(relevant_crime, Type=="Anti-social behaviour"))
+num_violence = nrow(subset(relevant_crime, Type=="Violence and sexual offences"))
+
+```
+
+# 2. Understanding and processing the data
+
+## Brexit referendum data
+
+EU referendum result contains the outcome of the poll for every governmental region of the UK. For further details about the data cleaning and the data itself please check Appendix A. and Appendix B.
+
+### Variables
+
+| Column     | Format  | Description                                    |
+|------------|---------|------------------------------------------------|
+| Region     | Text    | Big region of UK. E.g. "East"                  |
+| Area       | Text    | The governmental region where the poll occurred |
+| Votes_Cast | Numeric | Total number of valid votes                    |
+| Remain     | Numeric | No. votes against exit.                        |
+| Leave      | Numeric | No. votes for brexit.                          |
+
+Number of pro-brexit regions is `r sum(vote$Pro_brexit)` of `r nrow(vote)` total regions.
+
+## Crime data from UK Police forces
+
+Crime data from UK Police forces contains every crime that occurred in the UK (except Scotland) from January 2015 to November 2016. For further details about the data cleaning and the data itself please check Appendix A. and Appendix B.
+
+### Variables
+
+| Column    | Format  | Description                                         |
+|-----------|---------|-----------------------------------------------------|
+| Territory | Text    | Identifies the police force where the crime occurred |
+| Longitude | Numeric | Geographic coordinate of the crime scene            |
+| Latitude  | Numeric | Geographic coordinate of the crime scene            |
+| Type      | Text    | The type of the crime                               |
+| Month     | Numeric | The month when the crime occurred                    |
+| Year      | Numeric | The year when the crime occurred                     |
+
+There are `r num_crimes` observations of crimes. After filtering out non-relevant crimes keeping only **Anti-social behaviour** and **Violence and sexual offences** there are `r num_relevant_crimes` crimes left.
+
+```{r, fig.height=1.5, echo=FALSE}
+library(ggplot2)
+library(scales)
+library(gridExtra)
+
+p1 <- ggplot(data=data.frame(Crime_Type=c("Relevant Crimes","Other Crimes"), y=c(num_relevant_crimes, num_crimes-num_relevant_crimes)), aes(x="", y=y, fill=Crime_Type)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) + 
+  theme(axis.text.x=element_blank()) +
+  geom_text(aes(y = y/3 + c(0, cumsum(y)[-length(y)]), 
+            label = percent(y/nrow(crime))), size=3) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(),
+        axis.ticks = element_blank()) + 
+  ggtitle("Ratio of Relevant Crimes")
+
+p2 <- ggplot(data=data.frame(Crime_Type=c("Anti-social behavior","Violence and sex off."), y=c(num_antisocial, num_violence)), aes(x="", y=y, fill=Crime_Type)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) + 
+  theme(axis.text.x=element_blank()) +
+  geom_text(aes(y = y/3 + c(0, cumsum(y)[-length(y)]), 
+            label = percent(y/num_relevant_crimes)), size=3) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(),
+        axis.ticks = element_blank()) + 
+  ggtitle("Structure of Relevant Crimes")
+
+grid.arrange(p1, p2, ncol=2)
+```
+
+## Aggregating crimes
+In current analysis we take care only the monthly crime statistics not the individual crimes thus it has to be aggregated.
+
+```{r, echo=FALSE}
+crime$Count <- 1
+aggregated_crime <- aggregate(Count ~ Territory + Year + Month, data=crime, FUN = sum)
+```
+
+For demonstration purposes lets select a few police forces "Avon and Somerset Constabulary, Bedfordshire Police, Kent Police, Staffordshire Police" and visualize the number of crimes (Antisocial behavior and Violent) over time.
+
+```{r, fig.height=2.2, echo=FALSE}
+aggregated_crime$date <- as.Date( paste( aggregated_crime$Year, aggregated_crime$Month, "1" , sep = "." )  , format = "%Y.%m.%d" )
+
+ggplot(data=aggregated_crime, aes(x=date, y=Count)) +
+  geom_line(data = subset(aggregated_crime, Territory == "Avon and Somerset Constabulary"), aes(colour = "Avon and Somerset")) +
+  geom_line(data = subset(aggregated_crime, Territory == "Bedfordshire Police"), aes(colour = "Bedfordshire")) + 
+  geom_line(data = subset(aggregated_crime, Territory == "Kent Police"), aes(colour = "Kent")) +
+  geom_line(data = subset(aggregated_crime, Territory == "Staffordshire Police"), aes(colour = "Staffordshire")) +
+  scale_colour_manual("", 
+                      breaks = c("Avon and Somerset", "Bedfordshire", "Kent", "Staffordshire"),
+                      values = c("red", "green", "blue", "orange")) +
+  ggtitle("Crimes over time") + xlab("Date") + ylab("Monthly Number of Crimes")
+```
+Looking at this plot it is clearly evident that the crime rates topped around the time of brexit referendum (2016-06) but it can be a coincident or a trend too. Further analysis could help to resolve this.
+
+
+## Cross referencing with vote data
+Crime and brexit poll outcome data have be cross referenced wit the help of the xref data. (Please check Appendix A for further details). This xref data can connect Government regions that present in the vote dataset with police force regions those are in the crime dataset.
+
+The problem is that a police region can consist multiple areas. There are two possible solutions for this:
+
+|   | Solution                                                            |
+|---|---------------------------------------------------------------------|
+| A | Use the same crime data for all the areas in the same police region |
+| B | Aggregate the votes for each police regions                         |
+
+Solution A could jeopardize the the analysis because it is possible that a police region has one are with very low crime rates and an other area with large crime rates. Applying the same statistics for both region would be a mistake. Solution B is much better because there we will use valid vote counts but withing larger regions. The best solution would be to have more detailed crime data for each governmental areas. (Actually we have the data because a dataset with the geographical borders of each region is downloadable from the internet and every crime has a GPS coordinate pair, but this is out of the scope of this analysis) Please check Appendix B for details of the cross-referenced data. A binary variable Pro_brexit has to be calculated for each Police Force Areas to indicate whether the region is pro- or counter-brexit.
+
+
+```{r, echo=FALSE}
+vote <- merge(x = vote, y = xref, by.x = "Area", by.y = "Local_Authority_District", all.x = TRUE)
+# Remove areas that don't have Police Force Area because those are in Scotland and we don't have crime data for them
+vote <- subset(vote, !is.na(Police_Force_Area))
+# Aggregate votes per Police Force Areas
+aggregated_vote <- aggregate(cbind(Remain, Leave, Votes_Cast) ~ Police_Force_Area, data = vote, FUN = sum)
+# Recalculate Pro_brexit binary variable for each areas.
+aggregated_vote$Pro_brexit <- as.numeric(aggregated_vote$Leave > aggregated_vote$Remain)
+aggregated_vote <- aggregated_vote[, c(1,4,5)]
+
+# Merge vote and crime data
+crime_vote <- merge(x = aggregated_crime, y=aggregated_vote, by.x="Territory", by.y="Police_Force_Area", all.x=TRUE)
+# Filtering out Police Force Areas that don't have vote data. These are special police forces that are not binded to areas like "British Transport Police"
+crime_vote <- subset(crime_vote, !is.na(Pro_brexit))
+```
+
+After the cross referencing the dataset has the following properties:
+
+**Variables:**
+
+| Column     | Format  | Description                                          |
+|------------|---------|------------------------------------------------------|
+| Territory  | Text    | Identifies the police force where the crime occurred |
+| Year       | Numeric | The year when the crime occurred                     |
+| Month      | Numeric | The month when the crime occurred                    |
+| Count      | Numeric | The number of crimes                                 |
+| Votes_Cast | Numeric | Total number of valid votes                          |
+| Pro_brexit | Binary  | Indicates whether the region is pro-brexit           |
+
+**Statistics:**
+In the dataset there are `r nrow(unique(crime_vote[, c("Year", "Month")]))` months of data from `r length(unique(crime_vote$Territory))` Police Force Areas. From those there are `r sum(crime_vote$Pro_brexit)` pro-brexit areas.

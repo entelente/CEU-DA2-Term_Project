@@ -1,0 +1,37 @@
+---
+title: "Effect of Brexit on crime rates in the UK"
+author: "Janos Strasszer"
+date: '2017 January'
+header-includes:
+   - \usepackage{multicol}
+output:
+  pdf_document:
+    toc: yes
+---
+
+```{r setup-main, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\newpage
+```{r child='Chapter_1-Synopsis.Rmd'}
+```
+
+\newpage
+```{r child='Chapter_2-Understanding_the_data.Rmd'}
+```
+
+```{r child='Chapter_3-Analysis.Rmd'}
+```
+
+\newpage
+```{r child='Appendix_A-Data_Cleaning.Rmd'}
+```
+
+\newpage
+```{r child='Appendix_B-Data.Rmd'}
+```
+
+\newpage
+```{r child='Appendix_C-Code.Rmd'}
+```

@@ -1,0 +1,59 @@
+```{r cleancrimedata, eval=FALSE}
+library(readr)
+library(foreach)
+library(doParallel)
+library(data.table)
+
+
+# Automatic download is not working because of Onedrive limitations.
+# Please download the file manually and copy it to the right location
+RAW_FILE_URL = paste("https://onedrive.live.com/download?",
+                     "cid=757EB1DDF6DF0848&resid=757EB1DD",
+                     "F6DF0848%214618&authkey=AE479QFm0CzYd3w",
+                     sep = "")
+
+RAW_FILE = "data/raw_crime_data.zip"
+TEMP_DIR = "temp_crime"
+
+# Create temp directory and unzip data
+if(!dir.exists(TEMP_DIR)) {
+  dir.create(TEMP_DIR)
+  unzip( zipfile = RAW_FILE, exdir = TEMP_DIR)
+}
+
+# Iterate trough all directory to get all the filenames in a list
+files <- lapply(list.files(TEMP_DIR), function(d) {
+  lapply(list.files( paste(TEMP_DIR, "/", d, sep = "") ),
+         function(f) paste(TEMP_DIR, "/", d, "/", f, sep = "") )
+})
+files <- unlist(files) # Flatten list
+
+# Create a local cluster for parallel processing
+cl <- makeCluster(8)
+registerDoParallel(cl)
+
+
+crime <- foreach(i=1:length(files), .packages = c("readr")) %dopar% {
+          df_part <- data.frame(read_csv(files[i])) # Read CSV to DF
+          # Remove unused columns
+          df_part <- df_part[,c("Falls.within",
+                                "Longitude",
+                                "Latitude",
+                                "Crime.type",
+                                "Month")]
+          # create year and month columns
+          df_part$Year <-
+            as.numeric(gsub("(\\d\\d\\d\\d)-\\d\\d", "\\1", x = df_part$Month))
+          df_part$Month <-
+            as.numeric(gsub("\\d\\d\\d\\d-(\\d\\d)", "\\1", x = df_part$Month))
+          colnames(df_part) <-
+            c("Territory", "Longitude", "Latitude", "Type", "Month", "Year")
+          return(df_part)
+        }
+# Merge all dataframes to a big one
+crime <- rbindlist(crime) # rbindlist is much much faster than rbind
+
+stopCluster(cl)
+
+save(crime, file = "data/crime.rdata")
+```

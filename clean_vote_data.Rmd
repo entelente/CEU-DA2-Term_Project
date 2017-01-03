@@ -1,0 +1,23 @@
+```{r cleanvotedata, eval=FALSE}
+library(readr)
+
+# Source: http://www.electoralcommission.org.uk/find-information-by-subject/
+#         elections-and-referendums/upcoming-elections-and-referendums/
+#         eu-referendum/electorate-and-count-information
+
+RAW_FILE_URL = paste("http://www.electoralcommission.org.uk/__data/assets/",
+                     "file/0014/212135/EU-referendum-result-data.csv", sep = "")
+RAW_FILE = "data/raw_vote_data.csv"
+
+# Download file from the internet
+if(!file.exists(RAW_FILE)) {
+  download.file(RAW_FILE_URL, RAW_FILE, method = "curl")
+}
+
+vote <- read_csv("data/raw_vote_data.csv")
+
+# Keep only important columns
+vote <- vote[, c("Region", "Area", "Votes_Cast", "Remain", "Leave")]
+
+save(vote, file = "data/vote.rdata")
+```

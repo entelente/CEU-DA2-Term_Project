@@ -1,0 +1,21 @@
+---
+title: "Synopsis"
+output: pdf_document
+---
+
+
+# 1. Synopsis
+
+In 2016 there was a significant event in the history of the European Union. One of the member states - The United Kingdom - held a referendum to decide whether leave the union or stay. There were several articles [^1][^2] and Facebook posts before, during and after the Brexit voting that reported violent acts and hate crimes against foreigners and emigrants in the country. These reports suggested that these acts happened mainly in pro-brexit territories.
+
+**Did hate crimes happen during Brexit voting in a volume that is concerning? Was this really true or just some kind of political sensationalism?**
+
+A statistical analysis of the crime reports from United Kingdom's police forces can even prove or confute this.
+
+**Conclusion:** According to the following analysis and regression there is a connection. Pro-brexit regions encountered with higher crime rates in the months of the brexit referendum poll.
+
+**Note:** To reproduce the result please visit the public github repository of this analysis: https://github.com/entelente/CEU-DA2-Term_Project
+
+[^1]: The Guardian - Racist incidents feared to be linked to Brexit result ( https://www.theguardian.com/politics/2016/jun/26/racist-incidents-feared-to-be-linked-to-brexit-result-reported-in-england-and-wales)
+
+[^2]: Independent - Brexit: Wave of hate crime and racial abuse reported following EU referendum (http://www.independent.co.uk/news/uk/home-news/brexit-eu-referendum-racial-racism-abuse-hate-crime-reported-latest-leave-immigration-a7104191.html)

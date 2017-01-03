@@ -1,0 +1,45 @@
+---
+title: "Appendix B - Data"
+header-includes:
+   - \usepackage{multicol}
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+```
+
+# Appendix B - Data
+
+## Police forces
+
+```{r, results='asis', echo=FALSE}
+cat(paste("Number of police forces:", length(unique(crime$Territory))))
+cat(paste("Number of crimes:", nrow(crime)))
+cat(paste("Number of crime types:", length(unique(crime$Type))))
+cat("\\begin{multicols}{3}")
+t <- unique(crime$Territory)
+t <- gsub("\\&", "\\\\&", t)
+cat(t, sep="\\\\")
+cat("\\end{multicols}")
+```
+
+
+## Crime types
+
+```{r, results='asis', echo=FALSE}
+cat("\\begin{multicols}{3}")
+cat(unique(crime$Type), sep="\\\\")
+cat("\\end{multicols}")
+```
+
+## Govermental Areas
+```{r, results='asis', echo=FALSE}
+cat("\\scriptsize")
+cat("\\begin{multicols}{4}")
+cat(unique(vote$Area), sep="\\\\")
+cat("\\end{multicols}")
+cat("\\normalsize")
+```
+

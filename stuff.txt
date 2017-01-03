@@ -1,0 +1,20 @@
+Regions -> Voting regions: https://simple.wikipedia.org/wiki/Regions_of_England
+
+Vote data: http://www.electoralcommission.org.uk/find-information-by-subject/elections-and-referendums/upcoming-elections-and-referendums/eu-referendum/electorate-and-count-information
+
+Police forces:
+https://en.wikipedia.org/wiki/Law_enforcement_in_the_United_Kingdom
+https://en.wikipedia.org/wiki/List_of_police_forces_of_the_United_Kingdom
+
+Areas and Police forces Cross reference:
+https://data.gov.uk/dataset/local-authority-district-to-community-safety-partnerships-to-police-force-areas-december-2016-l
+
+
+Nice plots but not free voting data: https://knoema.com/jrbgmoc/uk-eu-membership-referendum-2016?action=download
+
+Crime Data:
+https://data.police.uk/data/
+
+Data files were generated from 2015-JAN to 2016-NOV including all regions
+Compressed: 450 Mb
+Uncompressed: 2284 Mb

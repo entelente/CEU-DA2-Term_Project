@@ -1,0 +1,132 @@
+---
+title: "Appendix C - Code"
+output: pdf_document
+---
+
+```{r setup-C, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Appendix C - Code
+
+## Chapter 2 - Understanding the data
+
+```{r, eval=FALSE}
+load("data/crime.rdata") # Load crime data
+load("data/vote.rdata") # Load vote data
+load("data/xref.rdata") # Load police/govermental xref data
+
+relevant_crime <- subset(crime, Type=="Anti-social behaviour" |
+                           Type == "Violence and sexual offences" )
+
+num_crimes = nrow(crime)
+num_relevant_crimes = nrow(relevant_crime)
+num_antisocial = nrow(subset(relevant_crime, Type=="Anti-social behaviour"))
+num_violence = nrow(subset(relevant_crime, Type=="Violence and sexual offences"))
+
+
+library(ggplot2)
+library(scales)
+library(gridExtra)
+
+p1 <- ggplot(data=data.frame(Crime_Type=c("Relevant Crimes","Other Crimes"),
+                             y=c(num_relevant_crimes, num_crimes-num_relevant_crimes)),
+             aes(x="", y=y, fill=Crime_Type)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) + 
+  theme(axis.text.x=element_blank()) +
+  geom_text(aes(y = y/3 + c(0, cumsum(y)[-length(y)]), 
+            label = percent(y/nrow(crime))), size=3) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(),
+        axis.ticks = element_blank()) + 
+  ggtitle("Ratio of Relevant Crimes")
+
+p2 <- ggplot(data=data.frame(Crime_Type=c("Anti-social behavior","Violence and sex off."),
+                             y=c(num_antisocial, num_violence)),
+             aes(x="", y=y, fill=Crime_Type)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) + 
+  theme(axis.text.x=element_blank()) +
+  geom_text(aes(y = y/3 + c(0, cumsum(y)[-length(y)]), 
+            label = percent(y/num_relevant_crimes)), size=3) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(),
+        axis.ticks = element_blank()) + 
+  ggtitle("Structure of Relevant Crimes")
+
+grid.arrange(p1, p2, ncol=2)
+
+
+crime$Count <- 1
+aggregated_crime <- aggregate(Count ~ Territory + Year + Month, data=crime, FUN = sum)
+
+aggregated_crime$date <- as.Date( paste( aggregated_crime$Year, aggregated_crime$Month,
+                                         "1" , sep = "." )  , format = "%Y.%m.%d" )
+
+ggplot(data=aggregated_crime, aes(x=date, y=Count)) +
+  geom_line(data = subset(aggregated_crime, Territory == "Avon and Somerset Constabulary"),
+            aes(colour = "Avon and Somerset")) +
+  geom_line(data = subset(aggregated_crime, Territory == "Bedfordshire Police"),
+            aes(colour = "Bedfordshire")) + 
+  geom_line(data = subset(aggregated_crime, Territory == "Kent Police"),
+            aes(colour = "Kent")) +
+  geom_line(data = subset(aggregated_crime, Territory == "Staffordshire Police"),
+            aes(colour = "Staffordshire")) +
+  scale_colour_manual("", 
+                breaks = c("Avon and Somerset", "Bedfordshire", "Kent", "Staffordshire"),
+                values = c("red", "green", "blue", "orange")) +
+  ggtitle("Crimes over time") + xlab("Date") + ylab("Monthly Number of Crimes")
+
+
+vote <- merge(x = vote, y = xref,
+              by.x = "Area",
+              by.y = "Local_Authority_District",
+              all.x = TRUE)
+# Remove areas that don't have Police Force Area because those are in Scotland
+# and we don't have crime data for them
+vote <- subset(vote, !is.na(Police_Force_Area))
+# Aggregate votes per Police Force Areas
+aggregated_vote <- aggregate(cbind(Remain, Leave, Votes_Cast) ~ Police_Force_Area,
+                             data = vote, FUN = sum)
+# Recalculate Pro_brexit binary variable for each areas.
+aggregated_vote$Pro_brexit <- as.numeric(aggregated_vote$Leave > aggregated_vote$Remain)
+aggregated_vote <- aggregated_vote[, c(1,4,5)]
+
+# Merge vote and crime data
+crime_vote <- merge(x = aggregated_crime, y=aggregated_vote,
+                    by.x="Territory", by.y="Police_Force_Area", all.x=TRUE)
+# Filtering out Police Force Areas that don't have vote data.
+# These are special police forces that are not binded to areas like "British Transport Police"
+crime_vote <- subset(crime_vote, !is.na(Pro_brexit))
+
+
+```
+
+## Chapter 3 - Regression Analysis
+
+```{r, eval=FALSE}
+# Keeping only months (May, June, July)
+reg_data <- subset(crime_vote, Month == 5 | Month == 6 | Month == 7)
+# Separating data from 2015 and 2016 and merge them calculating the difference
+reg_2015 <- subset(reg_data, Year == 2015)
+reg_2016 <- subset(reg_data, Year == 2016)
+reg_2015 <- reg_2015[, c(1, 4)]
+colnames(reg_2015) <- c("Territory", "Count2015")
+reg_2015 <- aggregate(Count2015 ~ Territory, data = reg_2015, FUN = sum)
+reg_2016 <- aggregate(Count ~ Territory + Votes_Cast + Pro_brexit,
+                      data = reg_2016, FUN = sum)
+reg_data <- merge(x = reg_2016, y=reg_2015, by="Territory", all.x=TRUE)
+reg_data$Delta_crime <- reg_data$Count - reg_data$Count2015
+
+reg1 <- lm(Delta_crime ~ Pro_brexit, data = reg_data)
+reg2 <- lm(Delta_crime ~ Pro_brexit + Votes_Cast, data = reg_data)
+
+library(stargazer)
+
+stargazer(list(reg1, reg2), column.labels = c("A", "B"),
+          digits=2, ci=TRUE, report = "vcsp*",
+          title="Comparing regressions",
+          type = "latex", header=FALSE)
+
+
+```
+

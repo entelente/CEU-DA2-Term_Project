@@ -1,0 +1,108 @@
+```{r createxrefdata, eval=FALSE}
+
+# Source: http://geoportal.statistics.gov.uk/datasets/296f0ff0013b4db484bacf2e2a8dd613_0.csv
+RAW_FILE_URL = "http://geoportal.statistics.gov.uk/datasets/296f0ff0013b4db484bacf2e2a8dd613_0.csv"
+RAW_FILE = "data/raw_area_police_xref.csv"
+
+# Download file from the internet
+if(!file.exists(RAW_FILE)) {
+  download.file(RAW_FILE_URL, RAW_FILE, method = "curl")
+}
+
+xref <- read_csv("data/raw_area_police_xref.csv")
+
+xref <- xref[, c(2, 6)]
+colnames(xref) <- c("Local_Authority_District", "Police_Force_Area")
+
+xref$Police_Force_Area[xref$Police_Force_Area =="Avon and Somerset"] <-
+  "Avon and Somerset Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "Bedfordshire"] <-
+  "Bedfordshire Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Cambridgeshire"] <-
+  "Cambridgeshire Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "Cheshire"] <-
+  "Cheshire Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "London, City of"] <-
+  "City of London Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Cleveland"] <-
+  "Cleveland Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Cumbria"] <-
+  "Cumbria Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "Derbyshire"] <-
+  "Derbyshire Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "Devon & Cornwall"] <-
+  "Devon & Cornwall Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Dorset"] <-
+  "Dorset Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Durham"] <-
+  "Durham Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "Dyfed-Powys"] <-
+  "Dyfed-Powys Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Essex"] <-
+  "Essex Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Gloucestershire"] <-
+  "Gloucestershire Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "Greater Manchester"] <-
+  "Greater Manchester Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Gwent"] <-
+  "Gwent Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Hampshire"] <-
+  "Hampshire Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "Hertfordshire"] <-
+  "Hertfordshire Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "Humberside"] <-
+  "Humberside Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Kent"] <-
+  "Kent Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Lancashire"] <-
+  "Lancashire Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "Leicestershire"] <-
+  "Leicestershire Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Lincolnshire"] <-
+  "Lincolnshire Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Merseyside"] <-
+  "Merseyside Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Metropolitan Police"] <-
+  "Metropolitan Police Service"
+xref$Police_Force_Area[xref$Police_Force_Area == "Norfolk"] <-
+  "Norfolk Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "North Wales"] <-
+  "North Wales Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "North Yorkshire"] <-
+  "North Yorkshire Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Northamptonshire"] <-
+  "Northamptonshire Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Northumbria"] <-
+  "Northumbria Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Nottinghamshire"] <-
+  "Nottinghamshire Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "South Wales"] <-
+  "South Wales Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "South Yorkshire"] <-
+  "South Yorkshire Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Staffordshire"] <-
+  "Staffordshire Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Suffolk"] <-
+  "Suffolk Constabulary"
+xref$Police_Force_Area[xref$Police_Force_Area == "Surrey"] <-
+  "Surrey Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Sussex"] <-
+  "Sussex Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Thames Valley"] <-
+  "Thames Valley Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Warwickshire"] <-
+  "Warwickshire Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "West Mercia"] <-
+  "West Mercia Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "West Midlands"] <-
+  "West Midlands Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "West Yorkshire"] <-
+  "West Yorkshire Police"
+xref$Police_Force_Area[xref$Police_Force_Area == "Wiltshire"] <-
+  "Wiltshire Police"
+
+# Manually add Police Serrvice of Northern Ireland
+xref <- rbind(xref, c("Northern Ireland", "Police Service of Northern Ireland"))
+
+save(xref, file = "data/xref.rdata")
+```
