@@ -150,4 +150,4 @@ After the cross referencing the dataset has the following properties:
 | Pro_brexit | Binary  | Indicates whether the region is pro-brexit           |
 
 **Statistics:**
-In the dataset there are `r nrow(unique(crime_vote[, c("Year", "Month")]))` months of data from `r length(unique(crime_vote$Territory))` Police Force Areas. From those there are `r sum(crime_vote$Pro_brexit)` pro-brexit areas.
+In the dataset there are `r nrow(unique(crime_vote[, c("Year", "Month")]))` months of data from `r length(unique(crime_vote$Territory))` Police Force Areas. From those there are `r sum(crime_vote$Pro_brexit)/23` pro-brexit areas.
